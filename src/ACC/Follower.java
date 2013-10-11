@@ -109,8 +109,6 @@ public class Follower extends Component {
 			@In("fPos") Double fPos,
 			@In("fLPos") Double fLPos,
 			@In("fLSpeed") Double fLSpeed,
-			@In("fLPosMin") Double fLPosMin,
-			@In("fLSpeedMin") Double fLSpeedMin,
 			@In("fInaccuracy") Double fInaccuracy, // Trigger
 			@In("fHeadwayDistance") Double fHeadwayDistance,
 
