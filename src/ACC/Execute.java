@@ -1,13 +1,13 @@
 package ACC;
 
+ 
 import java.util.Arrays;
 import java.util.List;
 
 import cz.cuni.mff.d3s.deeco.knowledge.KnowledgeManager;
 import cz.cuni.mff.d3s.deeco.knowledge.RepositoryKnowledgeManager;
 import cz.cuni.mff.d3s.deeco.knowledge.local.LocalKnowledgeRepository;
-import cz.cuni.mff.d3s.deeco.provider.AbstractDEECoObjectProvider;
-import cz.cuni.mff.d3s.deeco.provider.ClassDEECoObjectProvider;
+import cz.cuni.mff.d3s.deeco.provider.DEECoObjectProvider;
 import cz.cuni.mff.d3s.deeco.runtime.Runtime;
 import cz.cuni.mff.d3s.deeco.scheduling.MultithreadedScheduler;
 import cz.cuni.mff.d3s.deeco.scheduling.Scheduler;
@@ -32,7 +32,7 @@ public class Execute {
 		
 		Runtime rt = new Runtime(km, scheduler);
 		System.out.println("comp "+ components.size() + " , ensembles : "+ ensembles.size());
-		AbstractDEECoObjectProvider provider = new ClassDEECoObjectProvider(components, ensembles);
+		DEECoObjectProvider provider = new DEECoObjectProvider(components, ensembles);
 		System.out.println(" provider " + provider.getEnsembles());
 		
 		rt.registerComponentsAndEnsembles(provider);
