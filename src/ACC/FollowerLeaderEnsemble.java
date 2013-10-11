@@ -23,9 +23,9 @@ public class FollowerLeaderEnsemble extends Ensemble {
 			@In("member.lSpeed") Double lSpeed,
 			@In("member.lCreationTime") Double lCreationTime
 		){
-//		if( (fLPos - lPos) <= 2*fHeadwayDistance )
+		if( (fLPos - lPos) <= 2*fHeadwayDistance )
 			return true;
-//		return false;
+		return false;
 	}
 	
 	@KnowledgeExchange
