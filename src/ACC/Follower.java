@@ -47,7 +47,7 @@ public class Follower extends Component {
 	protected static final double SEC_MILISEC_FACTOR = 1000;
 	protected static final double DESIRED_DISTANCE = 50;
 	protected static final double DESIRED_SPEED = 90;
-	protected static final double THRESHOLD = 15;
+	protected static final double THRESHOLD = 30;
 
 	public Follower() {
 		name = "F";
@@ -84,67 +84,25 @@ public class Follower extends Component {
 			inaccuracy = Math.max( fLPos - fLPosMin.value , fLPosMax.value - fLPos ); 
 
 		if (inaccuracy <= THRESHOLD) {
-			computeTargetByCACC();
 			fLTargetPos.value = fLPos;
 			fLTargetSpeed.value = fLSpeed;
+			computeTargetByCACC(fPos, fSpeed, fLTargetPos.value, fLTargetSpeed.value, fGas, fBrake, fIntegratorError, fErrorWindup);
 		} else {
 			if ((fLPos - fPos) <= fHeadwayDistance) {
-				computeTargetByACC();
 				fLTargetPos.value = fLPos;
 				fLTargetSpeed.value = fLSpeed;
 			} else {
+				System.out.println("ACC _____ no leader.");
 				fLTargetPos.value = fPos + fHeadwayDistance;
 				fLTargetSpeed.value = DESIRED_SPEED;
-				System.out.println("ACC _____ no leader.");
 			}
+			computeTargetByACC(fLPos, fPos, fLTargetPos.value, fGas, fBrake);
 		}
-		speedControl(fPos, fSpeed, fLTargetPos.value, fLTargetSpeed.value, fGas, fBrake, fIntegratorError, fErrorWindup);
 	}
 	
 
 	
-	@Process
-	public static void speedControl(
-			@In("fPos") Double fPos,
-			@In("fSpeed") Double fSpeed, 
-			@In("fLTargetPos") Double fLTargetPos,
-			@In("fLTargetSpeed") Double fLTargetSpeed,
-
-			@Out("fGas") OutWrapper<Double> fGas,
-			@Out("fBrake") OutWrapper<Double> fBrake,
-
-			@InOut("fIntegratorError") OutWrapper<Double> fIntegratorError,
-			@InOut("fErrorWindup") OutWrapper<Double> fErrorWindup) {
-
-		if (fLTargetPos == 0.0) {
-			
-			fGas.value = 0.0;
-			fBrake.value = 0.0;
-			
-		} else {
-			
-			double timePeriodInSeconds = TIMEPERIOD / SEC_MILISEC_FACTOR;
-			double distanceError = -DESIRED_DISTANCE + fLTargetPos - fPos;
-			double pidDistance = KP_D * distanceError;
-			double error = pidDistance + fLTargetSpeed - fSpeed;
-			fIntegratorError.value += (KI_S * error + KT_S * fErrorWindup.value)
-					* timePeriodInSeconds;
-			double pidSpeed = KP_S * error + fIntegratorError.value;
-			fErrorWindup.value = saturate(pidSpeed) - pidSpeed;
-
-			if (pidSpeed >= 0) {
-				fGas.value = pidSpeed;
-				fBrake.value = 0.0;
-			} else {
-				fGas.value = 0.0;
-				fBrake.value = -pidSpeed;
-			}
-		}
-	}
-
-
-	@Process
-	public static void computeBeliefBoundaries(
+	private static void computeBeliefBoundaries(
 			@In("fLPos") Double fLPos,
 			@In("fLSpeed") Double fLSpeed,
 			@In("fLTargetPos") Double fLTargetPos,
@@ -207,13 +165,69 @@ public class Follower extends Component {
 	}
 
 
-	private static void computeTargetByCACC() {
+	private static void computeTargetByCACC(
+		@In("fPos") Double fPos,
+		@In("fSpeed") Double fSpeed, 
+		@In("fLTargetPos") Double fLTargetPos,
+		@In("fLTargetSpeed") Double fLTargetSpeed,
+
+		@Out("fGas") OutWrapper<Double> fGas,
+		@Out("fBrake") OutWrapper<Double> fBrake,
+
+		@InOut("fIntegratorError") OutWrapper<Double> fIntegratorError,
+		@InOut("fErrorWindup") OutWrapper<Double> fErrorWindup) {
+
 		System.out.println("CACC ____ takes the pos and the speed from wirless connection.");
+		if (fLTargetPos == 0.0) {
+			
+			fGas.value = 0.0;
+			fBrake.value = 0.0;
+			
+		} else {
+			
+			double timePeriodInSeconds = TIMEPERIOD / SEC_MILISEC_FACTOR;
+			double distanceError = -DESIRED_DISTANCE + fLTargetPos - fPos;
+			double pidDistance = KP_D * distanceError;
+			double error = pidDistance + fLTargetSpeed - fSpeed;
+			fIntegratorError.value += (KI_S * error + KT_S * fErrorWindup.value) * timePeriodInSeconds;
+			double pidSpeed = KP_S * error + fIntegratorError.value;
+			fErrorWindup.value = saturate(pidSpeed) - pidSpeed;
+	
+			if (pidSpeed >= 0) {
+				fGas.value = pidSpeed;
+				fBrake.value = 0.0;
+			} else {
+				fGas.value = 0.0;
+				fBrake.value = -pidSpeed;
+			}
+		}
 	}
 	
 
-	private static void computeTargetByACC() {
-		System.out.println("ACC _____ takes the pos and the speed from the headway sensors.");
+	private static void computeTargetByACC(		
+			@In("fLPos") Double fLPos,
+			@In("fPos") Double fPos,
+			@In("fLTargetPos") Double fLTargetPos,
+
+			@Out("fGas") OutWrapper<Double> fGas,
+			@Out("fBrake") OutWrapper<Double> fBrake
+			) {
+
+			System.out.println("ACC _____ takes the pos and the speed from the headway sensors.");
+			if (fLTargetPos == 0.0) {
+				
+				fGas.value = 0.0;
+				fBrake.value = 0.0;
+				
+			} else {
+				if ((fLPos - fPos) >= DESIRED_DISTANCE) {
+					fGas.value = 1.0;
+					fBrake.value = 0.0;
+				} else {
+					fGas.value = 0.0;
+					fBrake.value = 1.0;
+				}
+			}
 	}
 
 	
@@ -230,14 +244,12 @@ public class Follower extends Component {
 
 		@Override
 		public int getDimension() {
-			// TODO Auto-generated method stub
 			return 1;
 		}
 
 		@Override
 		public void computeDerivatives(double t, double[] y, double[] yDot)
 				throws MaxCountExceededException, DimensionMismatchException {
-			// TODO Auto-generated method stub
 			int params = 1;
 			int order = 1;
 			DerivativeStructure x = new DerivativeStructure(params, order, 0,
