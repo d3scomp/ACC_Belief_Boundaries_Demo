@@ -94,19 +94,18 @@ public class Follower extends Component {
 				System.out.println("ACC _____ no leader.");
 			}
 		}
-		ArrayList<Double> ar=speedControl(fPos, fSpeed, fLTargetPos.value, fLTargetSpeed.value);
-		fGas.value = ar.get(0);
-		fBrake.value = ar.get(1);
+		Pedal p = speedControl(fPos, fSpeed, fLTargetPos.value, fLTargetSpeed.value);
+		fGas.value = p.gas;
+		fBrake.value = p.brake;
 	}
 	
 
 	
-	private static ArrayList<Double> speedControl( Double fPos, Double fSpeed, Double fLTargetPos, Double fLTargetSpeed ) {
+	private static Pedal speedControl( Double fPos, Double fSpeed, Double fLTargetPos, Double fLTargetSpeed ) {
 
-		ArrayList<Double> result = new ArrayList<Double>();
+		Pedal result = null;
 		if (fLTargetPos == 0.0) {
-			result.add(0.0);
-			result.add(0.0);
+			result = new Pedal(0.0, 0.0);
 		} else {
 			double timePeriodInSeconds = TIMEPERIOD / SEC_MILISEC_FACTOR;
 			double distanceError = -DESIRED_DISTANCE + fLTargetPos - fPos;
@@ -118,11 +117,9 @@ public class Follower extends Component {
 			fErrorWindup = saturate(pidSpeed) - pidSpeed;
 
 			if (pidSpeed >= 0) {
-				result.add(pidSpeed);
-				result.add(0.0);
+				result = new Pedal(pidSpeed, 0.0);
 			} else {
-				result.add(0.0);
-				result.add(-pidSpeed);
+				result = new Pedal(0.0, -pidSpeed);
 			}
 		}
 		
@@ -220,4 +217,15 @@ public class Follower extends Component {
 			yDot[0] = f.getValue();
 		}
 	}
+	
+	private static class Pedal{
+		public Double gas;
+		public Double brake;
+	
+	public Pedal(Double gas,Double brake) {
+		this.gas = gas;
+		this.brake = brake;
+	}	
+}
+	
 }
