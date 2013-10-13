@@ -94,9 +94,9 @@ public class Follower extends Component {
 				System.out.println("ACC _____ no leader.");
 			}
 		}
-		Pedal p = speedControl(fPos, fSpeed, fLTargetPos.value, fLTargetSpeed.value);
-		fGas.value = p.gas;
-		fBrake.value = p.brake;
+		Pedal pedal = speedControl(fPos, fSpeed, fLTargetPos.value, fLTargetSpeed.value);
+		fGas.value = pedal.gas;
+		fBrake.value = pedal.brake;
 	}
 	
 
@@ -222,10 +222,10 @@ public class Follower extends Component {
 		public Double gas;
 		public Double brake;
 	
-	public Pedal(Double gas,Double brake) {
-		this.gas = gas;
-		this.brake = brake;
-	}	
-}
+		public Pedal(Double gas,Double brake) {
+			this.gas = gas;
+			this.brake = brake;
+		}	
+	}
 	
 }
